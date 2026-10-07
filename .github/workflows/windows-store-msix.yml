@@ -1,6 +1,14 @@
 name: Windows Store MSIX
 
 on:
+  push:
+    branches:
+      - codex/microsoft-store-msix
+    paths:
+      - .github/workflows/windows-store-msix.yml
+      - meshcore/**
+      - meshservice/**
+      - packaging/msix/**
   workflow_dispatch:
     inputs:
       version:
@@ -28,11 +36,17 @@ jobs:
       - name: Build Store MSIX
         shell: pwsh
         run: |
+          $packageVersion = '${{ github.event.inputs.version }}'
+          $identityName = '${{ github.event.inputs.identity_name }}'
+          $publisher = '${{ github.event.inputs.publisher }}'
+          if ([string]::IsNullOrWhiteSpace($packageVersion)) { $packageVersion = '1.0.0.0' }
+          if ([string]::IsNullOrWhiteSpace($identityName)) { $identityName = 'BravoERP.RemotoAgent' }
+          if ([string]::IsNullOrWhiteSpace($publisher)) { $publisher = 'CN=BravoERP Store Placeholder' }
           .\packaging\msix\Build-Msix.ps1 `
             -BinaryPath .\Release\MeshService64.exe `
-            -Version '${{ inputs.version }}' `
-            -IdentityName '${{ inputs.identity_name }}' `
-            -Publisher '${{ inputs.publisher }}'
+            -Version $packageVersion `
+            -IdentityName $identityName `
+            -Publisher $publisher
       - name: Upload unsigned Store package
         uses: actions/upload-artifact@v7
         with:
