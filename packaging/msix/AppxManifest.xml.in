@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10"
+  xmlns:desktop6="http://schemas.microsoft.com/appx/manifest/desktop/windows10/6"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  IgnorableNamespaces="uap uap10 desktop6 rescap">
+
+  <Identity
+    Name="@@IDENTITY_NAME@@"
+    Publisher="@@PUBLISHER@@"
+    Version="@@VERSION@@"
+    ProcessorArchitecture="@@ARCHITECTURE@@" />
+
+  <Properties>
+    <DisplayName>BravoERP Remoto</DisplayName>
+    <PublisherDisplayName>BravoERP</PublisherDisplayName>
+    <Description>Agente de soporte remoto seguro de BravoERP.</Description>
+    <Logo>Assets\StoreLogo.png</Logo>
+  </Properties>
+
+  <Resources>
+    <Resource Language="es-cl" />
+    <Resource Language="es-es" />
+  </Resources>
+
+  <Dependencies>
+    <TargetDeviceFamily
+      Name="Windows.Desktop"
+      MinVersion="10.0.19041.0"
+      MaxVersionTested="10.0.26100.0" />
+  </Dependencies>
+
+  <Applications>
+    <Application
+      Id="BravoERPRemotoAgent"
+      Executable="BravoERP-Remoto-Agent.exe"
+      EntryPoint="Windows.FullTrustApplication"
+      uap10:RuntimeBehavior="packagedClassicApp"
+      uap10:TrustLevel="mediumIL">
+      <uap:VisualElements
+        AppListEntry="none"
+        DisplayName="BravoERP Remoto"
+        Description="Agente de soporte remoto seguro de BravoERP."
+        BackgroundColor="transparent"
+        Square44x44Logo="Assets\Square44x44Logo.png"
+        Square150x150Logo="Assets\Square150x150Logo.png" />
+      <Extensions>
+        <desktop6:Extension
+          Category="windows.service"
+          Executable="BravoERP-Remoto-Agent.exe"
+          EntryPoint="Windows.FullTrustApplication"
+          uap10:RuntimeBehavior="packagedClassicApp"
+          uap10:TrustLevel="mediumIL">
+          <desktop6:Service
+            Name="Mesh Agent"
+            StartupType="auto"
+            StartAccount="localSystem"
+            Arguments="--storeMode=1 --disableUpdate=1" />
+        </desktop6:Extension>
+      </Extensions>
+    </Application>
+  </Applications>
+
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust" />
+    <rescap:Capability Name="packagedServices" />
+    <rescap:Capability Name="localSystemServices" />
+  </Capabilities>
+</Package>

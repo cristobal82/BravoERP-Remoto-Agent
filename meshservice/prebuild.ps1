@@ -27,6 +27,7 @@ $hash = $null;
 $hashdate = $null;
 $current = $null;
 $updated = $null;
+$brandingUpdated = $false;
 
 #
 # Parse out the GIT Commit Hash and GIT Commit Date, so we can update the resource
@@ -71,6 +72,16 @@ for($x=0;$x -lt $i.length;++$x)
 	  #
       $z[3] = $hashdate;
    }
+   if($z[1] -eq "FileDescription" -and $z[3] -ne "BravoERP Remoto Agent Service")
+   {
+      $z[3] = "BravoERP Remoto Agent Service";
+      $brandingUpdated = $true;
+   }
+   if($z[1] -eq "ProductName" -and $z[3] -ne "BravoERP Remoto")
+   {
+      $z[3] = "BravoERP Remoto";
+      $brandingUpdated = $true;
+   }
    $i[$x] = $z -Join '"';
 }
 
@@ -78,7 +89,7 @@ for($x=0;$x -lt $i.length;++$x)
 #
 # Only update MeshService.rc if the values were actually updated
 #
-if($current -ne $updated)
+if($current -ne $updated -or $brandingUpdated)
 {
    Write-Host "Updated MeshService.rc";
    $result = $i -Join [Environment]::NewLine

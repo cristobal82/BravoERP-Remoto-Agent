@@ -1,0 +1,42 @@
+name: Windows Store MSIX
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: MSIX version (four numeric parts)
+        required: true
+        default: 1.0.0.0
+      identity_name:
+        description: Package identity name from Partner Center
+        required: true
+        default: BravoERP.RemotoAgent
+      publisher:
+        description: Publisher distinguished name from Partner Center
+        required: true
+        default: CN=BravoERP Store Placeholder
+
+jobs:
+  package-x64:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v7
+      - name: Setup Visual Studio
+        uses: microsoft/setup-msbuild@v3
+      - name: Build x64 agent
+        run: msbuild MeshAgent-2022.sln /p:Configuration=Release /p:Platform=x64
+      - name: Build Store MSIX
+        shell: pwsh
+        run: |
+          .\packaging\msix\Build-Msix.ps1 `
+            -BinaryPath .\Release\MeshService64.exe `
+            -Version '${{ inputs.version }}' `
+            -IdentityName '${{ inputs.identity_name }}' `
+            -Publisher '${{ inputs.publisher }}'
+      - name: Upload unsigned Store package
+        uses: actions/upload-artifact@v7
+        with:
+          name: bravoerp-remoto-store-msix-x64
+          path: |
+            artifacts/BravoERP-Remoto-Agent.msix
+            artifacts/BravoERP-Remoto-Agent.msix.sha256

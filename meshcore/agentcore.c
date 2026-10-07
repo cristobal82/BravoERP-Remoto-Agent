@@ -6361,6 +6361,7 @@ int MeshAgent_Start(MeshAgentHostContainer *agentHost, int paramLen, char **para
 	GenerateSHA384FileHash(agentHost->exePath, agentHost->agentHash);
 
 	int _pX, _piX;
+	int storeMode = 0;
 	for (_pX = 1; _pX < paramLen; ++_pX)
 	{
 		if ((_piX = ILibString_IndexOf(param[_pX], (int)strnlen_s(param[_pX], sizeof(ILibScratchPad)), "=", 1)) > 2 && strncmp(param[_pX], "--", 2) == 0)
@@ -6369,11 +6370,50 @@ int MeshAgent_Start(MeshAgentHostContainer *agentHost, int paramLen, char **para
 			{
 				// Config files use working path, instead of binary path
 				agentHost->configPathUsesCWD = 1;
-				break;
 			}
+#ifdef WIN32
+			else if (_piX - 2 == 9 && strncmp(param[_pX] + 2, "storeMode", 9) == 0 && strncmp(param[_pX] + _piX + 1, "1", 1) == 0)
+			{
+				// Store packages are immutable. Keep all mutable agent state under
+				// %ProgramData% instead of attempting to write beside the executable.
+				storeMode = 1;
+				agentHost->configPathUsesCWD = 1;
+			}
+#endif
 		}
 	}
 
+#ifdef WIN32
+	if (storeMode != 0)
+	{
+		WCHAR programDataPath[MAX_PATH];
+		WCHAR storeDataPath[MAX_PATH];
+		DWORD programDataLen = GetEnvironmentVariableW(L"ProgramData", programDataPath, MAX_PATH);
+
+		if (programDataLen == 0 || programDataLen >= MAX_PATH)
+		{
+			ILIBCRITICALEXIT(249);
+		}
+		if (_snwprintf_s(storeDataPath, MAX_PATH, _TRUNCATE, L"%s\\BravoERP\\RemotoAgent", programDataPath) < 0)
+		{
+			ILIBCRITICALEXIT(249);
+		}
+
+		_snwprintf_s((WCHAR*)ILibScratchPad2, sizeof(ILibScratchPad2) / sizeof(WCHAR), _TRUNCATE, L"%s\\BravoERP", programDataPath);
+		if (CreateDirectoryW((LPCWSTR)ILibScratchPad2, NULL) == 0 && GetLastError() != ERROR_ALREADY_EXISTS)
+		{
+			ILIBCRITICALEXIT(249);
+		}
+		if (CreateDirectoryW(storeDataPath, NULL) == 0 && GetLastError() != ERROR_ALREADY_EXISTS)
+		{
+			ILIBCRITICALEXIT(249);
+		}
+		if (SetCurrentDirectoryW(storeDataPath) == 0)
+		{
+			ILIBCRITICALEXIT(249);
+		}
+	}
+#endif
 
 	ILibCriticalLogFilename = ILibString_Copy(MeshAgent_MakeAbsolutePath(agentHost->exePath, ".log"), 0);
 #ifndef MICROSTACK_NOTLS
@@ -6383,12 +6423,17 @@ int MeshAgent_Start(MeshAgentHostContainer *agentHost, int paramLen, char **para
 	ILibChain_OnDestroyEvent_AddHandler(agentHost->chain, MeshAgent_ChainEnd, agentHost);
 
 #ifdef WIN32
-	x = ILibString_LastIndexOf(param[0], -1, "\\", 1);
-	if (x > 0)
+	// In Store mode the current directory is the writable ProgramData data root.
+	// Preserve it instead of changing to the immutable package directory.
+	if (agentHost->configPathUsesCWD == 0)
 	{
-		strncpy_s(ILibScratchPad2, sizeof(ILibScratchPad2), param[0], x);
-		ILibScratchPad2[x] = 0;
-		SetCurrentDirectoryW(ILibUTF8ToWide(ILibScratchPad2, -1));
+		x = ILibString_LastIndexOf(param[0], -1, "\\", 1);
+		if (x > 0)
+		{
+			strncpy_s(ILibScratchPad2, sizeof(ILibScratchPad2), param[0], x);
+			ILibScratchPad2[x] = 0;
+			SetCurrentDirectoryW(ILibUTF8ToWide(ILibScratchPad2, -1));
+		}
 	}
 #endif
 
