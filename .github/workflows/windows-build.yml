@@ -5,6 +5,7 @@ run-name: Build Windows versions of MeshAgent
 on:
   push:
   pull_request:
+  workflow_dispatch:
 
 jobs:
   windows-build:
@@ -19,9 +20,18 @@ jobs:
       uses: microsoft/setup-msbuild@v3
     - name: Build ${{ matrix.platform }}
       run: msbuild MeshAgent-2022.sln /p:Configuration=Release /p:Platform=${{ matrix.platform }}
+    - name: Generate SHA-256 checksums
+      shell: pwsh
+      run: |
+        Get-ChildItem Release/*.exe | ForEach-Object {
+          $hash = (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  $($_.Name)"
+        } | Set-Content "Release/SHA256SUMS-${{ matrix.platform }}.txt"
     - name: Upload ${{ matrix.platform }} artifacts
       uses: actions/upload-artifact@v7
       with:
         name: meshagent-windows-${{ matrix.platform }}
-        path: Release/*.exe
+        path: |
+          Release/*.exe
+          Release/SHA256SUMS-${{ matrix.platform }}.txt
 
