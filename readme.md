@@ -1,5 +1,13 @@
 # MeshCentral Agent
 
+> **BravoERP Remoto Agent fork:** This repository is a public downstream project derived from
+> MeshAgent for authorized remote-support deployments. It contains no production configuration,
+> credentials, private keys, or customer data. See the [privacy policy](PRIVACY.md),
+> [security policy](SECURITY.md), and [code signing policy](CODE_SIGNING_POLICY.md).
+
+Current artifacts must not be described as SignPath-signed unless their Authenticode signature has
+been independently verified. The project is preparing an application to SignPath Foundation.
+
 ## Table of Contents
 
 [About](#about)  
